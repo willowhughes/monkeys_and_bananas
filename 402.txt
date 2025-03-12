@@ -1,0 +1,197 @@
+- finish deadwood, diagram and report
+
+
+operators:
+
+move(x, y)
+pre: at(monkey, x) and level(low)
+post:
+delete at(monkey, x)
+add at(monkey, y)
+
+pushbox(x, y)
+pre: at(monkey, x) and at(box, x) and level(low)
+post: 
+delete at(monkey, x), at(box, x)
+add at(monkey, y), at(box, y)
+
+climb up(x)
+pre: at(box, x) and at(monkey, x) and level(low)
+post:
+add level(high)
+delete level(low)
+
+climb down(x)...
+
+grab(x)
+pre: at(monkey, room) and at(banana, room) and level(high)
+post:
+add have(banana)
+
+
+objects:
+monkey
+box
+banana
+floor, ceiling
+
+locations:
+room a, b, c
+
+relations:
+at(object, location):
+level(low/high)
+have(object)
+
+initial state:
+assumption: level refers to monkey only
+at(monkey, a) and
+at(box, c) and
+at(banana, b) and
+level(low) and
+not have(banana) ....maybe this one
+
+goal state:
+have(banana)
+
+
+means-end analysis: backward chaining (look at post conditions)
+
+		      grab(x)
+	 move()       push()        climb_up()
+
+
+
+
+Shakey planning:
+goal state: at(box2, door2) and at(shakey, door2)
+		^
+     push(box2, corridor, door2)
+		^
+at(shakey, corr) and at(box2, corr)
+...
+
+(comparing against initial state in backwards chaining and current state for forward chaining)
+while goal! = init/curr state or backtracking or deadend:
+1) identify differences between goal and curr/init state
+2) Identify set of actions that could lessen differences
+3) take action
+4) update goal
+
+
+Monkeys and Bananas
+
+dfs for backwards chaining
+
+have 0s on the diagonal of the adjacency matrix
+
+this is an example of a probability of 1 that rooms connect
+  A B C
+A 0 1 1
+B 1 0 1
+C 1 1 0
+
+// two base case
+// at goal state
+// at dead end
+def get_plan(start_state, goal_state, plan):
+	if start_state == goal_state:
+		return plan, True // success
+	actions = get_actions(start_state, ...)
+	// where actions = a list of ordered pairs where [0] is the action and [1] is the arguments to that action
+	if not actions:
+		return plan, False
+	for action, args in actions:
+		next_state = action(*args) 
+		plan, is_solution = get_plan(next_state, goal_state, plan.deepcopy().append(action, args))
+		if is_solution:
+			return plan, True
+	return plan, False
+
+class Action():
+	def __init__():
+		pre = ...
+		post = ...
+	
+	def check_pre(state):
+
+	def check_post(state):
+
+	def __call__()
+
+
+
+Things that change state
+- monkey (location, level, hasBanana)
+- box (location)
+- banana (location)
+
+Options
+- state = [monkey_loc, monkey_level, has_banana, banana_loc, box_loc]
+
+
+
+
+
+
+
+
+
+
+
+
+
+Conjunctive NF
+no -> A and B or C
+yes -> A and (B or C)
+any well-formed formula can be converted to CNF
+
+
+resolution
+1) some kids like any food
+2) no kids like green food
+3) all kids like food made by cadbury's	
+.`. cadbury's doesn't make green food
+
+green(x)
+food(x)
+likes(x, y)
+child(x)
+made(x, y)
+madeByCadbury(x)
+
+see steps in slides
+
+1) exists x child(x) and all y food(y) -> likes(x,y) IGNORE THIS ONE
+
+2) all x all y [child(x) and green(y) and food(y) -> ~likes(x,y)]
+	all x all y ~child(x) or ~green(y) or ~food(y) or ~likes(x, y)
+
+3) all x all y [child(x) and food(y) and madeByCadbury(y)] -> likes(x,y)
+	remove implication and then use demorgans p and q = ~p or q
+	all x all y ~child(x) or ~food(y) or ~madeByCadbury(y) or likes(x,y)
+
+4) negation of conclusion: ~[all x [madeByCadbury(x) and food(x)] -> ~green(x)]
+							exists x ~[[madeByCadbury(x) and food(x)] -> ~green(x)]
+							exists x ~[~[madeByCadbury(x) and food(x)] or ~green(x)]
+							exists x madeByCadbury(x) and food(x) and green(x)
+
+step 3:
+mbc(egg) and food(egg) and green(egg)
+step 4:
+clause 1: {~child(x), ~green(y), ~food(y), ~likes(x,y)}
+clause 2: {~child(x), ~food(y), ~mbc(y), likes(x,y)}
+clause 3: mbc(egg)
+clause 4: food(egg)
+clause 5: green(egg)
+
+subsitute y for egg
+
+contradiction: {child(x) and ~likes(x, e)} and {child(x), likes(x, e)}
+
+examples 2:
+horse(x), animal(x), headof(x,y)
+all x horse(x) -> animal(x)
+____________________________
+all h all x [horse(x) and head(h,x)]->[head(h,x) and animal(x)]
+
