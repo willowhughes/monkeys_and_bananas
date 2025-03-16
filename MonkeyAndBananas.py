@@ -2,8 +2,8 @@ from Planner import Planner
 from WorldState import WorldState
 
 def main():
-    starting_banana_location = 2
-    starting_box_location = 0
+    starting_banana_location = 6
+    starting_box_location = 4
     starting_monkey_location = 0
     initial_state = dict(monkey_location = starting_monkey_location, banana_location = starting_banana_location, box_location = starting_box_location, monkey_level = 0, has_banana = 0)
     goal_state = dict(monkey_location = -1, banana_location = starting_banana_location, box_location = -1, monkey_level = -1, has_banana = 1)

@@ -46,7 +46,8 @@ class ClimbUp:
     def get_pre(state):
         new_state = copy.deepcopy(state)
         new_state['monkey_level'] = 0
-        new_state['box_location'] = state['monkey_location']
+        if state['box_location'] == -1:
+            new_state['box_location'] = state['monkey_location']
         return new_state
 
 class ClimbDown:
@@ -69,7 +70,6 @@ class ClimbDown:
     def get_pre(state):
         new_state = copy.deepcopy(state)
         new_state['monkey_level'] = 1
-        new_state['box_location'] = state['monkey_location']
         return new_state
     
 class Grab:

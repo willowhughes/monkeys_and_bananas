@@ -2,72 +2,97 @@ from Operators import ClimbUp, Move, Push, Grab, ClimbDown
 
 class Planner:
 
-    adj_matrix = [[0, 1, 1], 
-                  [1, 0, 1], 
-                  [1, 1, 0]]
+    # 7 by 7 adjacency matrix
+    adj_matrix = [[0, 1, 0, 0, 0, 0, 0],
+                  [1, 0, 1, 0, 0, 0, 0],
+                  [0, 1, 0, 1, 0, 1, 0],
+                  [0, 0, 1, 0, 1, 0, 0],
+                  [0, 0, 0, 1, 0, 0, 0],
+                  [0, 0, 1, 0, 0, 0, 1],
+                  [0, 0, 0, 0, 0, 1, 0]]
+    # adj_matrix = [[0, 1, 1], 
+    #               [1, 0, 1], 
+    #               [1, 1, 0]]
 
     def start(self, initial_state, goal_state):
-        print("Initial state: ", initial_state)
-        print()
-        print(self.get_actions(initial_state))
-        print()
-        print(self.get_backwards_actions(goal_state))
-        print()
-        print("Goal state: ", goal_state)
-        next = Grab.get_pre(goal_state)
-        print(next)
-        print(self.get_backwards_actions(next))
-        next = ClimbUp.get_pre(next)
-        print(next)
-        print(self.get_backwards_actions(next))
+
+        plan, is_solution = self.get_backwards_plan(initial_state, goal_state, [], set())
+        plan.reverse()
+        for action, args in plan:
+            print(action.__name__, args)
 
         # plan, is_solution = self.get_plan(initial_state, goal_state, [], [])
+
     '''
-    # dfs brute force 
-    def get_plan(self, inital_state, goal_state, plan, prev_states):
-        if inital_state == goal_state:
-            return plan, True # success
+    get_backwards_plan(self, initial_state, goal_state, plan, prev_states):
+        hash the state
         
-        actions = self.get_actions(goal_state)
-        # actions is a list of ordered pairs where [0] is the action and [1] is the arguments to that action
-        # how do I store the action and the args?
-        if not actions:
-            return plan, False
-        
-        for action, args in actions:
-            if len(args) == 0: # For ClimbUp, ClimbDown, and Grab which take only state
-                new_goal_state = action.get_post(goal_state)
-            else: # For Move and Push which take state and room arguments
-                new_goal_state = action.get_post(goal_state, *args)
+        if state is in previous states return plan, False
             
-            plan, is_solution = self.get_plan(inital_state, new_goal_state, plan.deepcopy().append(action, args), prev_states)
+        Add current state to visited states
+        
+        if goal state == inital return plan, True
+        
+        actions = get backwards actions
+        if actions is empty return plan, False
+        
+        for action_info in actions:
+            # Extract action and args based on the format of action_info
+            action = action_info[0]
+            args = action_info[1:] if len(action_info) > 1 else []
+            
+            # Use different methods to get precondition based on action type
+            if action in [Grab, ClimbUp, ClimbDown]:
+                predecessor_state = action.get_pre(goal_state)
+            else:  # Move and Push
+                predecessor_state = action.get_post(goal_state, args[0])
+            
+            new_plan = plan + [(action, args)] # Create a new plan by adding the current action
+            
+            # Recursive call with the new plan and updated prev_states
+            result_plan, is_solution = self.get_backwards_plan(initial_state, predecessor_state, new_plan, new_prev_states)
             if is_solution:
-                return plan, True
+                return result_plan, True
 
         return plan, False
     '''
 
-    
+    def get_backwards_plan(self, initial_state, goal_state, plan, prev_states):
+        state_hash = tuple(goal_state.values()) # Convert dictionary to hashable representation - just the values in a tuple
+        
+        if state_hash in prev_states: # Check if we've already visited this state
+            return plan, False
+            
+        # Add current state to visited states
+        new_prev_states = prev_states.copy()
+        new_prev_states.add(state_hash)
+        
+        if initial_state == goal_state:
+            return plan, True # success
+        
+        actions = self.get_backwards_actions(goal_state)
+        if not actions:
+            return plan, False
+        
+        for action_info in actions:
+            # Extract action and args based on the format of action_info
+            action = action_info[0]
+            args = action_info[1:] if len(action_info) > 1 else []
+            
+            # Use different methods to get precondition based on action type
+            if action in [Grab, ClimbUp, ClimbDown]:
+                predecessor_state = action.get_pre(goal_state)
+            else:  # Move and Push
+                predecessor_state = action.get_post(goal_state, args[0])
+            
+            new_plan = plan + [(action, args)] # Create a new plan by adding the current action
+            
+            # Recursive call with the new plan and updated prev_states
+            result_plan, is_solution = self.get_backwards_plan(initial_state, predecessor_state, new_plan, new_prev_states)
+            if is_solution:
+                return result_plan, True
 
-    def get_actions(self, state):
-        actions = []
-        if ClimbUp.check_pre(state):
-            actions.append([ClimbUp, []])
-        if ClimbDown.check_pre(state):
-            actions.append([ClimbDown, []])
-        if Grab.check_pre(state):
-            actions.append([Grab, []])
-        for i in range(len(Planner.adj_matrix)):
-            for j in range(len(Planner.adj_matrix[i])):
-                if Planner.adj_matrix[i][j] == 1:
-                    if Move.check_pre(state, i):
-                        # print("move ", i, "->", j)
-                        actions.append([Move, i, j])
-                    if Push.check_pre(state, i):
-                        # print("move ", i, "->", j)
-                        actions.append([Push, i, j])
-
-        return actions
+        return plan, False
     
     def get_backwards_actions(self, state):
         actions = []
